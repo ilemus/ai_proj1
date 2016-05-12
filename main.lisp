@@ -24,7 +24,7 @@
 (defun searchfor (temp x)
     (setq mtemp (car temp))
     (if (equal nil mtemp)
-        (list 'NO 'SUCH 'ROOM)
+        ()
         (if (equal (car mtemp) x)
             (cdr mtemp)
             (searchfor (cdr temp) x)
@@ -67,11 +67,26 @@
 
 ;A function WHERE that requires no inputs and tells Robbie
 ;   where he is.
-(defun where ()
-    (cond 
+(defun where()
+    (cond
         ((upstairsp loc) (append (list 'ROBBIE 'IS 'UPSTAIRS 'IN 'THE) (list loc)))
         ((onstairsp loc)  (append (list 'ROBBIE 'IS 'ON 'THE) (list loc)))
         (t (append (list 'ROBBIE 'IS 'DOWNSTAIRS 'IN 'THE) (list loc)))
+    )
+)
+
+(defun runtwo (dir)
+    (setlocation dir)
+    (where)
+)
+
+;A function MOVE that takes one input, a direction, and moves
+;   Robbie in that direction.
+(defun move (mDir)
+    (setq mLook (look mDir loc))
+    (cond
+        ((equal nil mLook) (list 'ouch! 'robbie 'hit 'a 'wall))
+        (t (runtwo mLook))
     )
 )
 
@@ -97,7 +112,6 @@
     (setq mtemp (choices loc))
     (if (listp mtemp)
         (searchfor mtemp dir)
-        (list 'POOR 'FORMAT)
     )
 )
     
