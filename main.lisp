@@ -21,16 +21,17 @@
                         (SOUTH BACK-STAIRS)))
 )
 
-(setf (get 'library 'children) '(back-stairs upstairs-bedroom))
-(setf (get 'back-stairs 'children) '(library downstairs-bedroom))
-(setf (get 'downstairs-bedroom 'children) '(back-stairs dining-room))
-(setf (get 'dining-room 'children) '(downstairs-bedroom living-room pantry))
-(setf (get 'pantry 'children) '(dining-room kitchen))
-(setf (get 'kitchen 'children) '(pantry living-room))
-(setf (get 'living-room 'children) '(kitchen dining-room front-stairs))
-(setf (get 'front-stairs 'children) '(living-room upstairs-bedroom))
-(setf (get 'upstairs-bedroom 'children) '(front-stairs library))
+(setq library (list '(back-stairs) '(upstairs-bedroom)))
+(setq back-stairs (list '(downstairs-bedroom) '(library)))
+(setq downstairs-bedroom (list '(back-stairs) '(dining-room)))
+(setq dining-room (list '(living-room) '(downstairs-bedroom) '(pantry)))
+(setq pantry (list '(dining-room) '(kitchen)))
+(setq kitchen (list '(pantry) '(living-room)))
+(setq living-room (list '(front-stairs) '(kitchen) '(dining-room)))
+(setq front-stairs (list '(upstairs-bedroom) '(living-room)))
+(setq upstairs-bedroom (list '(library) '(front-stairs)))
 
+;Used for creating list of choices
 (defun searchfor (temp x)
     (setq mtemp (car temp))
     (if (equal nil mtemp)
@@ -49,6 +50,16 @@
     (searchfor rooms x)
 )
 
+;The function LOOK that takes two inputs, a direction and a
+;   room, and tells Robbie where he will end up if he moved in
+;   that direction from that room.
+(defun look (dir loc)
+    (setq mtemp (choices loc))
+    (if (listp mtemp)
+        (searchfor mtemp dir)
+    )
+)
+
 ;An expression which sets a global variable LOC to hold
 ;   Robbie's current position in the PANTRY.
 (defun setLocation (x)
@@ -56,6 +67,22 @@
 )
 
 (setlocation 'pantry)
+
+;Used for counting the choices
+(defun count-for (mlist mcount)
+    (if (equal nil mlist)
+        mcount
+        (count-for (cdr mlist) (1+ mcount))
+    )
+)
+
+;A function HOW-MANY-CHOICES that tells how many choices
+;   Robbie has for where he may move given the current value of
+;   the variable LOC.
+(defun how-many-choices ()
+    (setq mtemp loc)
+    (count-for (choices mtemp) 0)
+)
 
 ;A predicate function UPSTAIRSP that returns T if it’s input
 ;   is an upstairs locations
@@ -85,6 +112,7 @@
     )
 )
 
+;Used to test moving to a location
 (defun runtwo (dir)
     (setlocation dir)
     (where)
@@ -100,48 +128,23 @@
     )
 )
 
-(defun count-for (mlist mcount)
-    (if (equal nil mlist)
-        mcount
-        (count-for (cdr mlist) (1+ mcount))
-    )
-)
-
-;A function HOW-MANY-CHOICES that tells how many choices
-;   Robbie has for where he may move given the current value of
-;   the variable LOC.
-(defun how-many-choices ()
-    (setq mtemp loc)
-    (count-for (choices mtemp) 0)
-)
-
-;The function LOOK that takes two inputs, a direction and a
-;   room, and tells Robbie where he will end up if he moved in
-;   that direction from that room.
-(defun look (dir loc)
-    (setq mtemp (choices loc))
-    (if (listp mtemp)
-        (searchfor mtemp dir)
-    )
-)
-
 ;depth first recursive searchfor
 (defun simple-depth (branch goal)
-    (if (listp branch)
-        (cond ((equal (car branch) goal) (cons (car branch) '()))
-            ((equal nil branch) nil)
-            (t (cons (car branch)
-                    (or (simple-depth (cdr branch) goal)
-                        (simple-depth (car branch) goal)
+    (cond ((equal (car branch) goal) (cons (car branch) '()))
+        (t (if (atom (car branch)) nil 
+                (cons (car branch)
+                    (or (simple-depth (cadr branch) goal)
+                        (simple-depth (eval (caadr branch)) goal)
                     )
                 )
             )
         )
-        (cond ((equal branch goal) (cons branch '()))
-            (t (cons branch 
-                    (simple-depth (get branch 'children) goal)
-                )
-            )
-        )
     )
+)
+
+;help Robbie find a path from PANTRY to the KITCHEN that
+;   passes through the LIBRARY.
+(defun go-to-kitchen ()
+    (cons '(pantry) (cons (simple-depth pantry 'library)
+    (simple-depth library 'kitchen)))
 )
