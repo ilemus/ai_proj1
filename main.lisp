@@ -21,6 +21,16 @@
                         (SOUTH BACK-STAIRS)))
 )
 
+(setf (get 'library 'children) '(back-stairs upstairs-bedroom))
+(setf (get 'back-stairs 'children) '(library downstairs-bedroom))
+(setf (get 'downstairs-bedroom 'children) '(back-stairs dining-room))
+(setf (get 'dining-room 'children) '(downstairs-bedroom living-room pantry))
+(setf (get 'pantry 'children) '(dining-room kitchen))
+(setf (get 'kitchen 'children) '(pantry living-room))
+(setf (get 'living-room 'children) '(kitchen dining-room front-stairs))
+(setf (get 'front-stairs 'children) '(living-room upstairs-bedroom))
+(setf (get 'upstairs-bedroom 'children) '(front-stairs library))
+
 (defun searchfor (temp x)
     (setq mtemp (car temp))
     (if (equal nil mtemp)
@@ -114,4 +124,24 @@
         (searchfor mtemp dir)
     )
 )
-    
+
+;depth first recursive searchfor
+(defun simple-depth (branch goal)
+    (if (listp branch)
+        (cond ((equal (car branch) goal) (cons (car branch) '()))
+            ((equal nil branch) nil)
+            (t (cons (car branch)
+                    (or (simple-depth (cdr branch) goal)
+                        (simple-depth (car branch) goal)
+                    )
+                )
+            )
+        )
+        (cond ((equal branch goal) (cons branch '()))
+            (t (cons branch 
+                    (simple-depth (get branch 'children) goal)
+                )
+            )
+        )
+    )
+)
